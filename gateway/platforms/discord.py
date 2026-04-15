@@ -1784,27 +1784,29 @@ class DiscordAdapter(BasePlatformAdapter):
 
             # ── Uncategorized (root-level) skills → direct subcommands ──
             for discord_name, description, cmd_key in uncategorized:
+                # Discord enforces a total 8000-character limit across all command
+                # metadata within a command group. Skill descriptions from SKILL.md
+                # are often too verbose, so keep Discord slash descriptions minimal.
                 cmd = discord.app_commands.Command(
                     name=discord_name,
-                    description=description or f"Run the {discord_name} skill",
+                    description=f"Run {discord_name}",
                     callback=_make_handler(cmd_key),
                 )
                 skill_group.add_command(cmd)
 
             # ── Category subcommand groups ──
             for cat_name in sorted(categories):
-                cat_desc = f"{cat_name.replace('-', ' ').title()} skills"
-                if len(cat_desc) > 100:
-                    cat_desc = cat_desc[:97] + "..."
+                # Keep group descriptions intentionally tiny to avoid Discord's
+                # aggregate 8000-character cap for nested command definitions.
                 cat_group = discord.app_commands.Group(
                     name=cat_name,
-                    description=cat_desc,
+                    description="Skills",
                     parent=skill_group,
                 )
                 for discord_name, description, cmd_key in categories[cat_name]:
                     cmd = discord.app_commands.Command(
                         name=discord_name,
-                        description=description or f"Run the {discord_name} skill",
+                        description=f"Run {discord_name}",
                         callback=_make_handler(cmd_key),
                     )
                     cat_group.add_command(cmd)
